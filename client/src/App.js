@@ -35,9 +35,57 @@ const data = {
 }
 
 const options = {
-    legend: {
-        display: true,
-        position: 'right'
+    layout: {
+        padding: 50
+    },
+    plugins: {
+        legend: {
+            position: 'right',
+            align: 'start',
+            labels: {
+                padding: 20,
+                usePointStyle: true,
+                boxWidth: 6
+            }
+        },
+        tooltip: {
+            displayColors: false,
+            yAlign: 'bottom',
+            xAlign: 'center',
+            backgroundColor: 'rgba(248,248,255,0.9)',
+            bodyColor: 'rgba(0,0,0,0.8)',
+            callbacks: {
+                title: function(tooltipItems, data) {
+                    return '';
+                },
+                label: function(context) {  
+                    const metricName = context.dataset.label;
+                    var tooltipLabel = context.parsed.y;
+                    if (metricName === "Moisture") {
+                        tooltipLabel += "%";
+                    } else if (metricName === "Temperature") {
+                        tooltipLabel += "°C";
+                    } else if (metricName === "Methane") {
+                        tooltipLabel += "ppm";
+                    }
+                    return tooltipLabel;
+                },
+                labelTextColor: function(context) {
+                    const metricName = context.dataset.label;
+                    var color = 'rgba(0,0,0,1)';
+                    if (metricName === "Moisture") {
+                        color = 'rgba(92,165,197,1)';
+                    } else if (metricName === "Temperature") {
+                        color = 'rgba(229,181,9,1)';
+                    } else if (metricName === "Methane") {
+                        color = 'rgba(65,154,79,1)';
+                    }
+
+                    return color;
+                    
+                },
+            }
+        }
     },
     scales: {
         A: {
@@ -70,9 +118,8 @@ const options = {
 
 export default class App extends React.Component {
     render() {
-        defaults.font.family = "'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif"
+        defaults.font.family = "'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif"
         defaults.font.size = 15
-        console.log(defaults)
         return ( 
             <div>
                 <div className = "App" >
@@ -80,15 +127,13 @@ export default class App extends React.Component {
                         < img src = { logo }
                             className = "App-logo"
                             alt = "logo" / >
-                        <p >Welcome to the Compost - o - matic Dashboard!</p>
+                        <p >Welcome to the Compost-O-Matic Dashboard!</p>
                     < /header > 
                 </div>
 
                 <div className = "chart" >
                     <Line data = { data }
-                        options = { options }
-                        height = { 50 }
-                        width = { 80 } />
+                        options = { options } />
                 < /div >
             < /div>
         );
