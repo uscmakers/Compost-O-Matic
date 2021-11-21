@@ -2,6 +2,7 @@ import logo from './logo.png';
 import './App.css';
 import React from 'react';
 import { Line, defaults } from 'react-chartjs-2';
+import Firebase from './Firebase.js';
 const data = {
     labels: ['12:00PM', '2:00PM', '4:00PM', '6:00PM', '8:00PM'],
     datasets: [{
@@ -120,6 +121,7 @@ export default class App extends React.Component {
     render() {
         defaults.font.family = "'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif"
         defaults.font.size = 15
+        Firebase.fetchData([])
         return ( 
             <div>
                 <div className = "App" >
