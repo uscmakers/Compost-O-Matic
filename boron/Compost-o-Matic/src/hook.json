@@ -1,0 +1,16 @@
+{
+  "event": "update",
+  "url": "https://compostomatic-default-rtdb.firebaseio.com/update/data.json",
+  "requestType": "POST",
+  "query": {
+    "auth": "KRNMMwvn2uqw6hSHFphorbsxF5Wvs7jxu2nONo8X"
+  },
+  "json": {
+    "temperature": "{{temperature}}",
+    "moisture": "{{moisture}}",
+    "methane": "{{methane}}",
+    "timestamp": "{{PARTICLE_PUBLISHED_AT}}"
+  },
+  "mydevices": true,
+  "noDefaults": true
+}
