@@ -10,28 +10,20 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Get a reference to the database service
-const database = getDatabase(app);
-
 /*
-Fetches data for user-selected timescale
-Params: Array of desired timestamps
+Fetches all data stored in Firebase realtime database
  */
-export function fetchData(timestamps) {
-    var data = [];
+export async function fetchData() {
+    console.log("beginning fetch")
     const dbRef = ref(getDatabase(app));
-    for (var i = 0; i < timestamps.length; i++) {
-        get(child(dbRef, `${timestamps[i]}`)).then((snapshot) => {
-            if (snapshot.exists()) {
-                console.log(snapshot.val());
-                data.push(snapshot.val());
-            } else {
-                console.log("No data available");
-                data.push(null);
-            }
-        }).catch((error) => {
-            console.error(error);
-        });
+    const snapshot = await get(child(dbRef, `update/data`))
+    var all_data = []
+    if (snapshot.exists()) {
+        console.log("here")
+        all_data = Object.values(snapshot.val());
+        return all_data
+    } else {
+        console.log("No data available");
+        return null
     }
-    return data;
 }

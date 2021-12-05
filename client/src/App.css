@@ -19,6 +19,12 @@
     margin: auto;
 }
 
+#soflow {
+    font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
 .App-header {
     background-color: #282c34;
     min-height: 100vh;
