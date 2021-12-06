@@ -35,7 +35,7 @@ function parseData(all_data,interval,timestamps) {
             }
         }
     }
-    return data;
+    return data.reverse();
 }
 
 
