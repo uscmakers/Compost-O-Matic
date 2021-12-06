@@ -13,8 +13,6 @@ class Dropdown extends Component {
   }
 
   handleChange(event) {
-    //logging for testing
-    console.log('testing value in Dropdown.js: ', event.target.value);
     this.props.onChange(event.target.value);
   }
 

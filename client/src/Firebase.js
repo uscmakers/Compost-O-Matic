@@ -14,16 +14,14 @@ const app = initializeApp(firebaseConfig);
 Fetches all data stored in Firebase realtime database
  */
 export async function fetchData() {
-    console.log("beginning fetch")
     const dbRef = ref(getDatabase(app));
     const snapshot = await get(child(dbRef, `update/data`))
     var all_data = []
     if (snapshot.exists()) {
-        console.log("here")
         all_data = Object.values(snapshot.val());
         return all_data
     } else {
-        console.log("No data available");
+        alert("No data available")
         return null
     }
 }

@@ -5,18 +5,49 @@ import { Line, defaults } from 'react-chartjs-2';
 import { fetchData } from './Firebase.js';
 import Dropdown from './Dropdown';
 
+function generateXLabelsAndTimestamps(interval,numPoints) {
+    var timestamps = []
+    var xLabels = []
+    var currMil = new Date().getTime();
+    var currRounded = Math.round(currMil / 1000 / 60 / interval) * interval * 60 * 1000;
+    if (currRounded > currMil) {
+        currRounded -= interval*60000; // decrement by interval mins
+    }
+    for (var i = 0; i < numPoints; i++) {
+        var currDate = new Date(currRounded);
+        var formatted = currDate.toLocaleString('en-US', {hour: 'numeric',minute: 'numeric',hour12: true});
+        xLabels.unshift(formatted);
+        timestamps.push(currRounded);
+        currRounded -= interval*60000; // decrement by interval mins
+    }
+    return {timestamps,xLabels};
+}
+
+function parseData(all_data,interval,timestamps) {
+    var data = Array(timestamps.length).fill(null)
+    if (all_data != []) {
+        for (var i = 0; i < all_data.length; i++) {
+            var curr = all_data[i];
+            var roundedTimestamp = Math.round(Date.parse(curr.timestamp) / 1000 / 60 / interval) * interval * 60 * 1000;
+            var foundTimestampIndex = timestamps.findIndex(t => t == roundedTimestamp);
+            if (foundTimestampIndex != -1) {
+                data[foundTimestampIndex] = curr;
+            }
+        }
+    }
+    return data;
+}
+
 
 export default class App extends React.Component {
-
     constructor(props) {
         super(props);
         this.state = {
             all_data: [],
-            moistureData: [12],
-            temperatureData: [22],
-            methaneData: [67],
-            xLabels: ["12:00PM"],
-            timescales: ["Day","Week","Month"],
+            moistureData: [],
+            temperatureData: [],
+            methaneData: [],
+            xLabels: [],
             data: {
                 labels: this.xLabels,
                 datasets: [{
@@ -134,39 +165,33 @@ export default class App extends React.Component {
         this.handleTimescaleChange = this.handleTimescaleChange.bind(this);
     };
 
-    generateXLabelsAndTimestamps(interval,numPoints) {
-        var timestamps = []
-        var xLabels = []
-        var currMil = new Date().getTime();
-        var currRounded = Math.round(currMil / 1000 / 60 / interval) * interval * 60 * 1000;
-        if (currRounded > currMil) {
-            currRounded -= interval*60000; // decrement by interval mins
-        }
-        for (var i = 0; i < numPoints; i++) {
-            var currDate = new Date(currRounded);
-            var formatted = currDate.toLocaleString('en-US', {hour: 'numeric',minute: 'numeric',hour12: true});
-            xLabels.unshift(formatted);
-            timestamps.push(currRounded);
-            currRounded -= interval*60000; // decrement by interval mins
-        }
-        return {timestamps,xLabels};
-
-    }
-
-    parseData(interval,timestamps) {
-        const all_data = this.state.all_data;
-        var data = Array(timestamps.length).fill(null)
-        if (all_data != []) {
-            for (var i = 0; i < all_data.length; i++) {
-                var curr = all_data[i];
-                var roundedTimestamp = Math.round(Date.parse(curr.timestamp) / 1000 / 60 / interval) * interval * 60 * 1000;
-                var foundTimestampIndex = timestamps.findIndex(t => t == roundedTimestamp);
-                if (foundTimestampIndex != -1) {
-                    data[foundTimestampIndex] = curr;
-                }
+    updateData(interval,numPoints) {
+        var {timestamps,xLabels} = generateXLabelsAndTimestamps(interval,numPoints)
+        var new_data = parseData(this.state.all_data,interval,timestamps)
+        var moistureData = []
+        var temperatureData = []
+        var methaneData = []
+        for (var i = 0; i < new_data.length; i++) {
+            var curr = new_data[i];
+            if (curr != null) {
+                moistureData.push(curr.moisture)
+                temperatureData.push(Math.round(curr.temperature * 10) / 10)
+                methaneData.push(curr.methane)
+            } else {
+                moistureData.push(null)
+                temperatureData.push(null)
+                methaneData.push(null)
             }
         }
-        return data;
+        var data = {...this.state.data}
+        data.labels = xLabels;
+        data.datasets[0].data = moistureData
+        data.datasets[1].data = temperatureData
+        data.datasets[2].data = methaneData
+        this.setState({
+            xLabels: xLabels,
+            data: data
+        })
     }
 
     handleTimescaleChange = (value) => {
@@ -191,70 +216,17 @@ export default class App extends React.Component {
                 break;
             case "All":
                 interval = 30;
-                numPoints = 48*1;
+                numPoints = 48*2;
                 break;
         }
-        var {timestamps,xLabels} = this.generateXLabelsAndTimestamps(interval,numPoints)
-        var new_data = this.parseData(interval,timestamps)
-        var moistureData = []
-        var temperatureData = []
-        var methaneData = []
-        for (var i = 0; i < new_data.length; i++) {
-            var curr = new_data[i];
-            if (curr != null) {
-                moistureData.push(curr.moisture)
-                temperatureData.push(Math.round(curr.temperature * 10) / 10)
-                methaneData.push(curr.methane)
-            } else {
-                moistureData.push(null)
-                temperatureData.push(null)
-                methaneData.push(null)
-            }
-        }
-        var data = {...this.state.data}
-        data.labels = xLabels;
-        data.datasets[0].data = moistureData
-        data.datasets[1].data = temperatureData
-        data.datasets[2].data = methaneData
-        this.setState({
-            xLabels: xLabels,
-            data: data
-        })
-
+        this.updateData(interval,numPoints);
     }
 
     async componentDidMount() {
         this.setState({
             all_data: await fetchData()
         })
-
-        var {timestamps,xLabels} = this.generateXLabelsAndTimestamps(15,8)
-        var new_data = this.parseData(15,timestamps)
-        var moistureData = []
-        var temperatureData = []
-        var methaneData = []
-        for (var i = 0; i < new_data.length; i++) {
-            var curr = new_data[i];
-            if (curr != null) {
-                moistureData.push(curr.moisture)
-                temperatureData.push(Math.round(curr.temperature * 10) / 10)
-                methaneData.push(curr.methane)
-            } else {
-                moistureData.push(null)
-                temperatureData.push(null)
-                methaneData.push(null)
-            }
-        }
-        var data = {...this.state.data}
-        data.labels = xLabels;
-        data.datasets[0].data = moistureData
-        data.datasets[1].data = temperatureData
-        data.datasets[2].data = methaneData
-        this.setState({
-            xLabels: xLabels,
-            data: data
-        })
-
+        this.updateData(15,8);
     }
 
 
