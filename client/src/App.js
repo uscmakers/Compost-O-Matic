@@ -8,7 +8,7 @@ import Dropdown from './Dropdown';
 function generateXLabelsAndTimestamps(interval,numPoints) {
     var timestamps = []
     var xLabels = []
-    var currMil = new Date().getTime();
+    var currMil = new Date(2021, 11, 5);
     var currRounded = Math.round(currMil / 1000 / 60 / interval) * interval * 60 * 1000;
     if (currRounded > currMil) {
         currRounded -= interval*60000; // decrement by interval mins
@@ -135,7 +135,7 @@ export default class App extends React.Component {
                 scales: {
                     A: {
                         type: 'linear',
-                        display: false,
+                        display: true,
                         position: 'left',
                         ticks: {
                             beginAtZero: true,
@@ -143,8 +143,8 @@ export default class App extends React.Component {
                     },
                     B: {
                         type: 'linear',
-                        display: false,
-                        position: 'left',
+                        display: true,
+                        position: 'right',
                         ticks: {
                             beginAtZero: true,
                         },
@@ -242,7 +242,7 @@ export default class App extends React.Component {
                             className = "App-logo"
                             alt = "logo" / >
                         <p >Welcome to the Compost-O-Matic Dashboard!</p>
-                    < /header > 
+                    </header> 
                 </div>
 
                 <div className = "chart" >
@@ -250,8 +250,8 @@ export default class App extends React.Component {
                     <Line data = { this.state.data }
                         options = { this.state.options }
                         redraw={true} />
-                < /div >
-            < /div>
+                </div>
+            </div>
         );
     }
 }
