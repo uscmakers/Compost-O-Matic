@@ -1,0 +1,19 @@
+{
+    "extensions.ignoreRecommendations": true,
+    "C_Cpp.default.configurationProvider": "particle.particle-vscode-core",
+    "cortex-debug.openocdPath": "${command:particle.getDebuggerOpenocdPath}",
+    "files.associations": {
+        "*.ino": "cpp",
+        "chrono": "cpp",
+        "array": "cpp",
+        "iterator": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "vector": "cpp",
+        "algorithm": "cpp",
+        "memory": "cpp"
+    },
+    "particle.firmwareVersion": "3.3.0-rc.1",
+    "particle.targetPlatform": "boron",
+    "particle.targetDevice": "compost"
+}
