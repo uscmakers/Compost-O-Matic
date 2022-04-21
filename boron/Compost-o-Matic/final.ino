@@ -1,17 +1,7 @@
 
 /***
   @brief: sends data from temperature and soil moisture sensors to particle console: https://console.particle.io/
-  @return:
-  [
-    {
-      “key”: “temperature”,
-      “value”: 69.349998
-    },
-    {
-      “key”: “soil”,
-      “value”: 109.046318
-    }
-  ]
+  @return: {"temperature": <temp>,"moisture": <moisture>}
   @note: to restart device, hold both MODE and RESET on boron and release RESET once LED blinks magenta.
   @note: this program relies on the <DS18B20.h> and "JsonParserGeneratorRK.h" libraries and they must be installed on local device. To install, do command-shift-P and find "Particle: Install Library" and install DS18B20. Repeat steps for JsonParserGeneratorRK.
 ***/
@@ -81,24 +71,21 @@ void getSoil() {
 ***/
  void publishData(){
    Serial.println("publishing");
+   char temp[]  = { 't', 'e', 'm', 'p', '\0'};
+   char moisture[] = {'m', 'o', 'i', 's', 't','u', 'r', 'e', '\0'};
+   char reading[] = {'r', 'e', 'a', 'd', 'i', 'n', 'g', '\0'};
   JsonWriterStatic<622> jw;
   jw.init();  // empty buffer for reuse (since jw is static)
-
   {
-    JsonWriterAutoArray obj(&jw);
+    // JsonWriterAutoArray obj(&jw);
 
     jw.startObject();
-    jw.insertKeyValue("key", "temperature");
-    jw.insertKeyValue("value", fahrenheit);
-    jw.finishObjectOrArray();
-
-    jw.startObject();
-    jw.insertKeyValue("key", "soil");
-    jw.insertKeyValue("value", soilMoisturePercent);
+    jw.insertKeyValue(temp, fahrenheit);
+    jw.insertKeyValue(moisture, soilMoisturePercent);
     jw.finishObjectOrArray();
 
     jw.finishObjectOrArray();
   }
   // TODO: set endpoint
-  Particle.publish("reading", jw.getBuffer());
+  Particle.publish(reading, jw.getBuffer());
 } 
