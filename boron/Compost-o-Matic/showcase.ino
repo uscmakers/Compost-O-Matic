@@ -4,6 +4,7 @@
   @return: {"temperature": <temp>,"moisture": <moisture>}
   @note: to restart device, hold both MODE and RESET on boron and release RESET once LED blinks magenta.
   @note: this program relies on the <DS18B20.h> and "JsonParserGeneratorRK.h" libraries and they must be installed on local device. To install, do command-shift-P and find "Particle: Install Library" and install DS18B20. Repeat steps for JsonParserGeneratorRK.
+  @note: SHOWCASE version has no sleep implemented and publishes every 10 seconds
 ***/
 
 #include <DS18B20.h>
