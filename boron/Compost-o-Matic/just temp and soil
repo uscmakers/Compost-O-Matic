@@ -1,0 +1,25 @@
+
+#include <DS18B20.h>
+const int TEMPERATURE = A4;
+const int SOIL = A0;
+
+const int AirValue = 3670;   // our definition of air value
+const int WaterValue = 800;  // our definition of water value
+DS18B20 temp_sensor(TEMPERATURE, true); // initialize temperature probe
+void setup() {
+  pinMode(TEMPERATURE, INPUT);
+  pinMode(SOIL, INPUT);
+}
+
+void loop() {
+  getTemp();
+  delay(1000);
+  getSoil();
+  delay(1000);
+}
+
+void getTemp(){
+  float _temp = temp_sensor.getTemperature();
+  float fahrenheit = temp_sensor.convertToFahrenheit(_temp);
+  Serial.println("Temperature measure" + String(fahrenheit));
+}
