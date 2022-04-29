@@ -188,6 +188,7 @@ export default class App extends React.Component {
 
         };
         this.handleTimescaleChange = this.handleTimescaleChange.bind(this);
+        this.handlePointsChange = this.handlePointsChange.bind(this);
         this.make_request = this.make_request.bind(this);
     };
 
@@ -222,11 +223,12 @@ export default class App extends React.Component {
         // Make a HTTP request via AJAX to Node server 
         let httpRequest = new XMLHttpRequest();
         httpRequest.open(method, url);
-        httpRequest.setRequestHeader("Access-Control-Allow-Headers", "*");
+        // httpRequest.setRequestHeader("Access-Control-Allow-Headers", "*");
+        httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         if (data == "") {
             httpRequest.send();
         } else {
-            httpRequest.send("points=20");
+            httpRequest.send(data);
         }
         httpRequest.onreadystatechange = async function() {
             // console.log(httpRequest.readyState);
@@ -263,6 +265,34 @@ export default class App extends React.Component {
         }.bind(this));
     }
 
+    handlePointsChange = (event) => {
+        this.make_request("https://compost-o-matic.herokuapp.com/linearRegression", "points="+event.target.value*2,
+            function(returnVal){
+                console.log("POINTS VALUE"+returnVal);
+                var jsonReturnVal = JSON.parse(returnVal);
+                var trending = "temperature was ";
+                if (jsonReturnVal.tempSlope > 0.05) {
+                    trending += "trending up"
+                } else if (jsonReturnVal.tempSlope < -0.05) {
+                    trending += "trending down"
+                } else {
+                    trending += "relatively consistent"
+                }
+                trending += " and moisture was "
+                if (jsonReturnVal.moistureSlope > 0.05) {
+                    trending += "trending up"
+                } else if (jsonReturnVal.moistureSlope < -0.05) {
+                    trending += "trending down"
+                } else {
+                    trending += "relatively consistent"
+                }
+                trending += "."
+                this.setState({
+                    trending_msg: trending
+                })
+            }.bind(this), "POST");
+    }
+
     async componentDidMount() {
         this.make_request("https://compost-o-matic.herokuapp.com/getData", "",
             function(returnVal){
@@ -270,10 +300,29 @@ export default class App extends React.Component {
                 this.displayResults(returnVal, 1);
         }.bind(this));
 
-        // this.make_request("https://compost-o-matic.herokuapp.com/linearRegression", "points=20",
-        // function(returnVal){
-        //     // console.log("POINTS RETURN VAL"+returnVal);
-        // }.bind(this), "POST");
+        this.make_request("https://compost-o-matic.herokuapp.com/linearRegression", "points=24",
+        function(returnVal){
+            var trending = "temperature was ";
+            if (returnVal.tempSlope > 0.05) {
+                trending += "trending up"
+            } else if (returnVal.tempSlope < -0.05) {
+                trending += "trending down"
+            } else {
+                trending += "relatively consistent"
+            }
+            trending += " and moisture was "
+            if (returnVal.moistureSlope > 0.05) {
+                trending += "trending up"
+            } else if (returnVal.moistureSlope < -0.05) {
+                trending += "trending down"
+            } else {
+                trending += "relatively consistent"
+            }
+            trending += "."
+            this.setState({
+                trending_msg: trending
+            })
+    }.bind(this), "POST");
 
         this.make_request("https://compost-o-matic.herokuapp.com/goodData", "",
         function(returnVal){
@@ -358,13 +407,14 @@ export default class App extends React.Component {
                             redraw={true} />
                     </div>
                     <div className = "recommendations">
-                        {/* <p style={this.state.temp_good ? { color: 'green'} : { color: 'red' }}>{this.state.temp_msg}</p>
-                        <p style={this.state.moisture_good ? { color: 'green'} : { color: 'red' }}>{this.state.moisture_msg}</p> */}
                         <p style={{ color: 'red' }}>{this.state.temp_msg}</p>
                         <p style={{ color: 'red' }}>{this.state.moisture_msg}</p>
                         <p style={{ color: 'green' }}>{this.state.just_right_msg}</p>
-                        <p style={{ color: 'black' }}>{this.state.trending_msg}</p>
                     </div>
+                    <div className = "trends" >
+                        <p style={{ color: 'gray', marginTop: "10px" }}>In the past <input type="number" defaultValue="12" onChange={this.handlePointsChange} /> hours, {this.state.trending_msg}</p>
+                    </div>
+
                 </div>
 
                 <div className = "col">

@@ -58,6 +58,10 @@ p {
     padding-left: 20px;
 }
 
+input {
+    width: 50px;
+}
+
 .dropdown {
     padding-left: 20px;
 }
