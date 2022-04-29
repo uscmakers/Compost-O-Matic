@@ -34,7 +34,7 @@ function generateXLabelsAndTimestamps(numDays, data, skip) {
                 dayCount++;
             }
         } else {
-            if (numDays == 1 && dayCounter % 4 == 0) {
+            if (numDays == 1 && dayCounter % 1 == 0) {
                 let formatted = currTime.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
                 xLabels.unshift(formatted);
             } else {
@@ -260,7 +260,7 @@ export default class App extends React.Component {
         }
         this.make_request("https://compost-o-matic.herokuapp.com/getData", "",
             function(returnVal){
-                // console.log("returnval"+returnVal);
+                console.log("returnval"+returnVal);
                 this.displayResults(returnVal, numDays);
         }.bind(this));
     }
@@ -296,7 +296,7 @@ export default class App extends React.Component {
     async componentDidMount() {
         this.make_request("https://compost-o-matic.herokuapp.com/getData", "",
             function(returnVal){
-                // console.log("returnval"+returnVal);
+                console.log("returnval"+returnVal);
                 this.displayResults(returnVal, 1);
         }.bind(this));
 
