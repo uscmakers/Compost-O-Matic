@@ -425,7 +425,7 @@ export default class App extends React.Component {
                         <ReactFC
                             type="thermometer"
                             width="100%"
-                            height="100%"
+                            height="55%"
                             dataFormat="JSON"
                             dataSource={this.state.curr_temp}
                         />
@@ -434,7 +434,7 @@ export default class App extends React.Component {
                         <ReactFC
                             type="cylinder"
                             width="100%"
-                            height="100%"
+                            height="55%"
                             dataFormat="JSON"
                             dataSource={this.state.curr_moisture}
                         />
