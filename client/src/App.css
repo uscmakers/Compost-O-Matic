@@ -13,20 +13,65 @@
     }
 }
 
+body {
+    background-color: #bfcab4bd;
+}
+
+.outer {
+    width: 95%;
+    /* height: auto; */
+    /* overflow: auto; */
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    margin-bottom: 50px;
+}
+
+.col {
+    float: left;
+    margin: 10px;
+    margin-bottom: 50px;
+    padding: 10px;
+    background-color: white;
+    box-shadow: 3px 3px 3px 3px #ccc;
+}
+
+h2 {
+    text-align: center;
+}
+
 .chart {
-    height: 600px;
-    width: 1200px;
-    margin: auto;
+    width: 800px;
+}
+
+.graphic {
+    width: 250px;
+    float: left;
+}
+
+.graphic rect {
+    display: none;
+}
+
+p {
+    margin: 0px;
+    padding-left: 20px;
+}
+
+.dropdown {
+    padding-left: 20px;
 }
 
 #soflow {
     font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    font-size: 16px;
+    font-size: 17px;
+    padding: 2px;
+    font-weight: 600;
     border-radius: 6px;
 }
 
 .App-header {
-    background-color: #282c34;
+    background-color: #6f9580;
     min-height: 100vh;
     display: flex;
     flex-direction: column;

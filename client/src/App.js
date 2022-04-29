@@ -2,38 +2,39 @@ import logo from './logo.png';
 import './App.css';
 import React from 'react';
 import { Line, defaults } from 'react-chartjs-2';
-import { fetchData } from './Firebase.js';
 import Dropdown from './Dropdown';
+import FusionCharts from 'fusioncharts';
+import Widgets from 'fusioncharts/fusioncharts.widgets';
+import FusionTheme from 'fusioncharts/themes/fusioncharts.theme.fusion';
+import ReactFC from 'react-fusioncharts';
 
-function generateXLabelsAndTimestamps(numDays, data) {
+ReactFC.fcRoot(FusionCharts, Widgets, FusionTheme);
+
+
+function generateXLabelsAndTimestamps(numDays, data, skip) {
     let timestamps = []
     let xLabels = []
-    data = data.reverse();
     let currDay = new Date(data[0]);
     let dayCount = 1;
-    let skip = 1;
-    if (numDays >= 15) {
-        skip = 8;
-    } else if (numDays >= 7) {
-        skip = 4;
-    } else if (numDays >= 3) {
-        skip = 2;
-    }
-
+    let dayCounter = 0;
+    
     for (let i = 0; i < data.length; i+=skip) {
         let currTime = new Date(data[i]);
+        dayCounter++;
         if (i == data.length-1 || new Date(data[i+1]).getDay() != currDay.getDay()) { // the next day is a new day or we're at the end
+            console.log("A NEW DAY!!!!!!!!")
             if (numDays == 1) {
                 break;
             }
             let formatted = currTime.toLocaleString('en-US', { month: 'numeric', day: 'numeric', hour12: true });
             xLabels.unshift(formatted);
+            console.log(formatted)
             if (i != data.length-1) {
                 currDay = new Date(data[i+1]);
                 dayCount++;
             }
         } else {
-            if (numDays == 1) {
+            if (numDays == 1 && dayCounter % 4 == 0) {
                 let formatted = currTime.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
                 xLabels.unshift(formatted);
             } else {
@@ -46,29 +47,24 @@ function generateXLabelsAndTimestamps(numDays, data) {
         }
     }
     
+    // console.log(timestamps);
+    // console.log(xLabels);
+    // xLabels = xLabels.reverse();
     return { timestamps, xLabels };
 }
-
-function parseData(all_data, interval, timestamps) {
-    let data = Array(timestamps.length).fill(null)
-    if (all_data != []) {
-        for (let i = 0; i < all_data.length; i++) {
-            let curr = all_data[i];
-            let roundedTimestamp = Math.round(Date.parse(curr.timestamp) / 1000 / 60 / interval) * interval * 60 * 1000;
-            let foundTimestampIndex = timestamps.findIndex(t => t == roundedTimestamp);
-            if (foundTimestampIndex != -1) {
-                data[foundTimestampIndex] = curr;
-            }
-        }
-    }
-    return data.reverse();
-}
-
 
 export default class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            curr_temp: {},
+            curr_moisture: {},
+            temp_good: true,
+            moisture_good: true,
+            temp_msg: "",
+            moisture_msg: "",
+            just_right_msg: "",
+            trending_msg: "",
             all_data: [],
             moistureData: [],
             temperatureData: [],
@@ -87,8 +83,8 @@ export default class App extends React.Component {
                     {
                         label: 'Temperature',
                         fill: false,
-                        backgroundColor: 'rgb(229, 181, 9)',
-                        borderColor: 'rgb(229, 181, 9)',
+                        backgroundColor: 'rgb(189, 32, 49)',
+                        borderColor: 'rgb(189, 32, 49)',
                         borderWidth: 2,
                         data: this.temperatureData,
                         yAxisID: 'B'
@@ -97,7 +93,7 @@ export default class App extends React.Component {
             },
             options: {
                 layout: {
-                    padding: 50
+                    padding: 20
                 },
                 plugins: {
                     legend: {
@@ -121,12 +117,12 @@ export default class App extends React.Component {
                             },
                             label: function(context) {
                                 const metricName = context.dataset.label;
-                                let tooltipLabel = context.parsed.y;
-                                console.log("label index " + context.parsed.x)
+                                let tooltipLabel = Math.round(context.parsed.y * 100) / 100;
+                                // console.log("label index " + context.parsed.x)
                                 if (metricName === "Moisture") {
                                     tooltipLabel += "%";
                                 } else if (metricName === "Temperature") {
-                                    tooltipLabel += "°C";
+                                    tooltipLabel += "°F";
                                 }
                                 return tooltipLabel;
                             },
@@ -134,9 +130,9 @@ export default class App extends React.Component {
                                 const metricName = context.dataset.label;
                                 let color = 'rgba(0,0,0,1)';
                                 if (metricName === "Moisture") {
-                                    color = 'rgba(92,165,197,1)';
+                                    color = 'rgb(92, 165, 197)';
                                 } else if (metricName === "Temperature") {
-                                    color = 'rgba(229,181,9,1)';
+                                    color = 'rgb(189, 32, 49)';
                                 }
 
                                 return color;
@@ -146,6 +142,11 @@ export default class App extends React.Component {
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            autoSkip: false
+                        }
+                      },
                     A: {
                         type: 'linear',
                         display: true,
@@ -168,11 +169,11 @@ export default class App extends React.Component {
                         type: 'linear',
                         display: true,
                         position: 'right',
-                        min: 50,
-                        max: 120,
+                        min: 40,
+                        max: 110,
                         title: {
                             display: true,
-                            text: 'Temperature (°C)'
+                            text: 'Temperature (°F)'
                         },
                         grid: {
                             display: false
@@ -191,35 +192,51 @@ export default class App extends React.Component {
     };
 
     displayResults(resultsString, numDays) {
-        // Convert the JSON string into JS objects
         let resultsJS = JSON.parse(resultsString);
-
+        // console.log("RESULT SJS " + resultsJS.temperatureData)
         let data = {...this.state.data }
-        data.labels = resultsJS.dateTimeData;
-        data.datasets[0].data = resultsJS.moistureData
-        data.datasets[1].data = resultsJS.temperatureData
-        let { timestamps, xLabels } = generateXLabelsAndTimestamps(numDays, resultsJS.dateTimeData)
+        let skip = 1;
+        if (numDays >= 15) {
+            skip = 8;
+        } else if (numDays >= 7) {
+            skip = 4;
+        } else if (numDays >= 3) {
+            skip = 2;
+        }
+        let { timestamps, xLabels } = generateXLabelsAndTimestamps(numDays, resultsJS.dateTimeData.reverse(), skip)
         data.labels = xLabels;
+        data.datasets[0].data = resultsJS.moistureData.filter((element, index) => {
+            return index % skip === 0;
+          }).reverse().slice(0, xLabels.length).reverse()
+        data.datasets[1].data = resultsJS.temperatureData.filter((element, index) => {
+            return index % skip === 0;
+          }).reverse().slice(0, xLabels.length).reverse()
+        // console.log("skip " + data.datasets[1].data)
         this.setState({
             xLabels: xLabels,
             data: data
         })
     };
 
-    make_request(fn) {
+    make_request(url, data, fn, method="GET") {
         // Make a HTTP request via AJAX to Node server 
         let httpRequest = new XMLHttpRequest();
-        httpRequest.open("GET", "https://compost-o-matic.herokuapp.com/getData");
-        httpRequest.send();
+        httpRequest.open(method, url);
+        httpRequest.setRequestHeader("Access-Control-Allow-Headers", "*");
+        if (data == "") {
+            httpRequest.send();
+        } else {
+            httpRequest.send("points=20");
+        }
         httpRequest.onreadystatechange = async function() {
-            console.log(httpRequest.readyState);
+            // console.log(httpRequest.readyState);
             if (httpRequest.readyState == 4) {
                 if (httpRequest.status == 200) {
-                    console.log("response" + httpRequest.responseText);
+                    // console.log("response" + httpRequest.responseText);
                     fn(httpRequest.responseText);
                 } else {
                     alert("AJAX error!!!");
-                    console.log(httpRequest.status);
+                    // console.log(httpRequest.status);
                 }
             }
         }
@@ -239,21 +256,82 @@ export default class App extends React.Component {
                 numDays = 30;
                 break;
         }
-        this.make_request(function(returnVal){
-            console.log("returnval"+returnVal);
-            this.displayResults(returnVal, numDays);
+        this.make_request("https://compost-o-matic.herokuapp.com/getData", "",
+            function(returnVal){
+                // console.log("returnval"+returnVal);
+                this.displayResults(returnVal, numDays);
         }.bind(this));
     }
 
     async componentDidMount() {
-        this.setState({
-            all_data: await fetchData()
-        })
-        this.make_request(function(returnVal){
-            console.log("returnval"+returnVal);
-            this.displayResults(returnVal, 1);
+        this.make_request("https://compost-o-matic.herokuapp.com/getData", "",
+            function(returnVal){
+                // console.log("returnval"+returnVal);
+                this.displayResults(returnVal, 1);
         }.bind(this));
+
+        // this.make_request("https://compost-o-matic.herokuapp.com/linearRegression", "points=20",
+        // function(returnVal){
+        //     // console.log("POINTS RETURN VAL"+returnVal);
+        // }.bind(this), "POST");
+
+        this.make_request("https://compost-o-matic.herokuapp.com/goodData", "",
+        function(returnVal){
+            // console.log("returnval"+returnVal);
+            var temperature = ""
+            var moisture = ""
+            var just_right = ""
+            if (JSON.parse(returnVal).temperatureGood == "Low") {
+                temperature = "Temperature is too low -- try adding green material and turning the compost."
+            } else if (JSON.parse(returnVal).temperatureGood == "High") {
+                temperature = "Temperature is too high -- try opening the lid."
+            }
+            if (JSON.parse(returnVal).moistureGood == "Low") {
+                moisture = "Moisture is too low -- try adding water."
+            } else if (JSON.parse(returnVal).moistureGood == "High") {
+                moisture = "Moisture is too high -- try adding dry material."
+            }
+
+            if (moisture == "" && temperature == "") {
+                just_right = "Your compost looks great!"
+            }
+            this.setState({
+                temp_msg: temperature,
+                moisture_msg: moisture,
+                just_right_msg: just_right,
+                curr_temp: {
+                    chart: {
+                        upperlimit: "120",
+                        numbersuffix: "°F",
+                        thmfillcolor: "#bd2031",
+                        showgaugeborder: "1",
+                        gaugebordercolor: "#bd2031",
+                        gaugeborderthickness: "2",
+                        plottooltext: "Current Compost Temperature: <b>$datavalue</b> ",
+                        theme: "fusion",
+                    },
+                    value: JSON.parse(returnVal).temperatureData
+                },
+                curr_moisture: {
+                    chart: {
+                        upperlimit: "100",
+                        numbersuffix: "%",
+                        thmfillcolor: "#5ca5c5",
+                        showgaugeborder: "1",
+                        gaugebordercolor: "#5ca5c5",
+                        gaugeborderthickness: "2",
+                        plottooltext: "Current Compost Moisture: <b>$datavalue</b> ",
+                        theme: "fusion",
+                    },
+                    value: JSON.parse(returnVal).moistureData
+                },
+            })
+    }.bind(this));
+
+
     }
+
+    
 
 
     render() {
@@ -271,12 +349,53 @@ export default class App extends React.Component {
                 </header> 
             </div>
 
-            <div className = "chart" >
-                <Dropdown onChange={this.handleTimescaleChange} />
-                <Line data = { this.state.data }
-                    options = { this.state.options }
-                    redraw={true} />
+            <div className = "outer">
+                <div className = "col">
+                    <div className = "chart" >
+                        <Dropdown onChange={this.handleTimescaleChange} />
+                        <Line data = { this.state.data }
+                            options = { this.state.options }
+                            redraw={true} />
+                    </div>
+                    <div className = "recommendations">
+                        {/* <p style={this.state.temp_good ? { color: 'green'} : { color: 'red' }}>{this.state.temp_msg}</p>
+                        <p style={this.state.moisture_good ? { color: 'green'} : { color: 'red' }}>{this.state.moisture_msg}</p> */}
+                        <p style={{ color: 'red' }}>{this.state.temp_msg}</p>
+                        <p style={{ color: 'red' }}>{this.state.moisture_msg}</p>
+                        <p style={{ color: 'green' }}>{this.state.just_right_msg}</p>
+                        <p style={{ color: 'black' }}>{this.state.trending_msg}</p>
+                    </div>
+                </div>
+
+                <div className = "col">
+                    <div>
+                        <h2>Compost At-a-Glance</h2>
+                    </div>
+                    <div className = "graphic">
+                        <ReactFC
+                            type="thermometer"
+                            width="100%"
+                            height="55%"
+                            dataFormat="JSON"
+                            dataSource={this.state.curr_temp}
+                        />
+                    </div>
+                    <div className = "graphic">
+                        <ReactFC
+                            type="cylinder"
+                            width="100%"
+                            height="55%"
+                            dataFormat="JSON"
+                            dataSource={this.state.curr_moisture}
+                        />
+                    </div>
+                </div>
+
+
+
+
             </div>
+
         </div>
 
         );
